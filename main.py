@@ -6,9 +6,9 @@ import csv
 import ast
 from datetime import datetime
 import logging
-from .auxclock import AuxClock
-from .webbrowser import BrowserManager
-from .domain import Domain
+from auxclock import AuxClock
+from browsermanager import BrowserManager
+from domain import Domain
 
 OUTPUT_DIR = 'output'
 options = {'only_screenshot': False, 'target_time': 10, 'debug': 0}
