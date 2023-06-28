@@ -1,0 +1,7 @@
+requests
+tldextract
+python-whois
+dnspython
+selenium
+webdriver-manager
+ndjson
