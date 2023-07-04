@@ -7,6 +7,16 @@ import whois
 import dns.resolver
 import json
 import ndjson
+import logging
+from datetime import datetime
+from auxclock import AuxClock
+from browsermanager import BrowserManager
+
+OUTPUT_DIR = 'output'
+
+def get_time_string():
+    now = datetime.now()
+    return now.strftime('%Y-%m-%d-%H-%M-%S')
 
 class Domain:
 

@@ -42,31 +42,6 @@ RUN CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_
     chmod +x /tmp/chromedriver && \
     mv /tmp/chromedriver /usr/local/bin/chromedriver
 
-WORKDIR /app
-
-# Set the user as root to perform administrative tasks
-USER root
-
-# Create the desired directory and change its ownership and permissions
-RUN mkdir -p /app/screenshots \
-    && chown -R root:root /app/screenshots \
-    && chmod -R 755 /app/screenshots
-
-RUN mkdir -p /app/output \
-    && chown -R root:root /app/output \
-    && chmod -R 755 /app/output
-    
-# Set up a non-root user
-RUN useradd --no-log-init -r -u 1000 -g root -m -d /home/user -s /bin/bash user
-RUN chown -R user:root /app/screenshots
-RUN chown -R user:root /app/output
-
-USER user
-
-# Copy the Python script and input.csv to the working directory
-COPY main.py .
-COPY input.csv .
-
 # Install Python dependencies without prompting for input
 RUN python -m pip install --no-cache-dir --upgrade \
     requests \
@@ -76,6 +51,40 @@ RUN python -m pip install --no-cache-dir --upgrade \
     selenium \
     ndjson \
     webdriver-manager
+
+WORKDIR /app
+
+# Set the user as root to perform administrative tasks
+USER root
+
+# Create the desired directory and change its ownership and permissions
+RUN mkdir -p /app/screenshots \
+    && chown -R root:root /app/screenshots \
+    && chmod -R 777 /app/screenshots
+
+RUN mkdir -p /app/output \
+    && chown -R root:root /app/output \
+    && chmod -R 777 /app/output
+
+RUN chown -R root:root /app/* \
+    && chmod -R 777 /app/*
+    
+# Set up a non-root user
+RUN useradd --no-log-init -r -u 456 -g root -m -d /home/user -s /bin/bash user
+
+# Copy the Python script and input.csv to the working directory
+COPY main.py .
+COPY auxclock.py .
+COPY browsermanager.py .
+COPY domain.py .
+COPY input.csv .
+COPY log.log .
+
+RUN chown -R user:root /app/screenshots
+RUN chown -R user:root /app/output
+RUN chown -R user:root /app
+
+USER user
 
 # Set the entrypoint command to run your main.py script
 CMD python main.py --input input.csv --output output.csv --threads 8 --debug 8

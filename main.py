@@ -1,10 +1,8 @@
 import os
-from time import time
 from concurrent.futures import ThreadPoolExecutor
 import argparse
 import csv
 import ast
-from datetime import datetime
 import logging
 from auxclock import AuxClock
 from browsermanager import BrowserManager
@@ -12,10 +10,6 @@ from domain import Domain
 
 OUTPUT_DIR = 'output'
 options = {'only_screenshot': False, 'target_time': 10, 'debug': 0}
-
-def get_time_string():
-    now = datetime.now()
-    return now.strftime('%Y-%m-%d-%H-%M-%S')
 
 def process_url(id, main_domain, domain_url):
 
