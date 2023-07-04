@@ -86,5 +86,7 @@ RUN chown -R user:root /app
 
 USER user
 
+ARG DEBUG_DOMAIN=0
+
 # Set the entrypoint command to run your main.py script
-CMD python main.py --input input.csv --output output.csv --threads 8 --debug 8
+CMD python main.py --input input.csv --output output.csv --threads 8 --debug $DEBUG_DOMAIN
