@@ -19,10 +19,10 @@ def get_time_string():
     return now.strftime('%Y-%m-%d-%H-%M-%S')
 
 class Domain:
-
   manager = None
 
-  def __init__(self, id, main_domain, url):
+  def __init__(self, id, main_domain, url, DNS=None):
+    self.NS = ['8.8.8.8', '4.4.4.4'] 
     self.id = id
     self.clock = AuxClock()
     self.main_domain = main_domain
@@ -30,9 +30,15 @@ class Domain:
     self.domain = f'{ext.domain}.{ext.suffix}'
     self.ssl_cert = None
     self.dns_info = None
+    self.dns_cname = None
     self.mx_info = None
     self.whois_info = None
     self.screenshot_file_path = None
+
+    # set DNS name server
+    if DNS: 
+      self.NS = [DNS]
+    dns.resolver.nameservers = self.NS
 
     if self.manager is None:
       self.manager = BrowserManager()
@@ -46,8 +52,10 @@ class Domain:
     self.clock.checkpoint('SSL')
 
   def get_dns_info(self):
-    ips = socket.getaddrinfo(self.domain, None)
-    self.dns_info = [ip[4][0] for ip in ips if ip[0] == socket.AF_INET]
+    ips = dns.resolver.resolve(self.domain, 'A')
+    self.dns_info = [str(record.exchange) for record in ips]    
+    ips = dns.resolver.resolve(self.domain, 'CNAME')
+    self.dns_cname = [str(record.exchange) for record in ips]
     self.clock.checkpoint('DNS')
 
   def get_mx_records(self):
@@ -83,6 +91,7 @@ class Domain:
         'domain': self.domain,
         'ssl_cert': self.ssl_cert,
         'dns_info': self.dns_info,
+        'dns_cname': self.dns_cname,
         'mx_info': self.mx_info,
         'whois_info': self.whois_info,
         'screenshot_file_path': self.screenshot_file_path,

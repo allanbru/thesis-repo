@@ -57,20 +57,20 @@ WORKDIR /app
 # Set the user as root to perform administrative tasks
 USER root
 
+# Set up a non-root user
+RUN useradd -u 1000 -g root -m -d /home/crawler -s /bin/bash crawler
+
 # Create the desired directory and change its ownership and permissions
 RUN mkdir -p /app/screenshots \
-    && chown -R root:root /app/screenshots \
+    && chown -R crawler:root /app/screenshots \
     && chmod -R 777 /app/screenshots
 
 RUN mkdir -p /app/output \
-    && chown -R root:root /app/output \
+    && chown -R crawler:root /app/output \
     && chmod -R 777 /app/output
 
-RUN chown -R root:root /app/* \
+RUN chown -R crawler:root /app/* \
     && chmod -R 777 /app/*
-    
-# Set up a non-root user
-RUN useradd --no-log-init -r -u 456 -g root -m -d /home/user -s /bin/bash user
 
 # Copy the Python script and input.csv to the working directory
 COPY main.py .
@@ -80,13 +80,13 @@ COPY domain.py .
 COPY input.csv .
 COPY log.log .
 
-RUN chown -R user:root /app/screenshots
-RUN chown -R user:root /app/output
-RUN chown -R user:root /app
+RUN chmod +x /app/*.py
+RUN chmod +w /app/log.log
+RUN chown -R 1000:root /app 
 
-USER user
+USER crawler
 
 ARG DEBUG_DOMAIN=0
 
 # Set the entrypoint command to run your main.py script
-CMD python main.py --input input.csv --output output.csv --threads 8 --debug $DEBUG_DOMAIN
+CMD python main.py --input input.csv --output output.csv --threads 1 --debug $DEBUG_DOMAIN
