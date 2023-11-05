@@ -1,5 +1,6 @@
 from time import time
 import multiprocessing
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
@@ -25,6 +26,7 @@ def call_timeout(timeout, func, args=(), kwargs={}):
         raise TimeLimitException(f'Took to long to execute {str(func)}({str(args)})')
       else:
         return True
+      
 
 class WebBrowser:
 
@@ -35,28 +37,27 @@ class WebBrowser:
     self.id = self.NEXT_BROWSER_ID
     self.init_browser()
     self.init_task_time = time()
+    self.domain = None
     self.domain_instance = None
     WebBrowser.manager = manager
     WebBrowser.NEXT_BROWSER_ID += 1
 
   def init_browser(self):
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    self.browser = webdriver.Chrome(options=chrome_options)
     self.free = True
 
-  def take_screenshot(self, url, file_path, instance = None):
+  def take_screenshot(self, url):
+    self.domain = url
     self.init_task_time = time()
     if self.free:
       self.free = False
       status = False
       try:
-        status = call_timeout(BrowserManager.target_time, self.internal_take_screenshot, args=(url, file_path))
+        status = call_timeout(BrowserManager.target_time, self.dotnet_screenshoter)
       except TimeLimitException as e:
         print(f"[BROWSER] Timed out!")
-      status = self.internal_take_screenshot(url, file_path)
+      except Exception as e:
+        print(f"[BROWSER {self.id}] - Error: {str(e)}")
+      
       if status and isinstance(self.manager, BrowserManager):
         self.free = True
         self.manager.free_callback(self)
@@ -67,25 +68,26 @@ class WebBrowser:
     else:
       raise Exception(f'[BROWSER {self.id}] {url}: take_screenshot called when busy')
 
-  def internal_take_screenshot(self, url, file_path):
-
-    if self.browser is None:
-      self.init_browser()
+  def dotnet_screenshoter(self):
+    print(f"[BROWSER {self.id}] START screenshot phase for {self.domain}")
     try:
-      self.browser.get(f'https://{url}')
-      self.browser.save_screenshot(file_path)
-      #close?
-      print(f'[BROWSER {self.id}] Screenshot taken for {url}. Location: {file_path}')
-      return True
-    except Exception as e:
-      print(f'[BROWSER {self.id}] Got an error while taking the screenshot for {url}: {str(e)}')
-      self.domain_instance.screenshot_callback(False, '')
-      return False
+      result = subprocess.run(f"/app/screenshoter/PhishingCrawler {self.domain}",
+                              shell=True, 
+                              check=True, 
+                              stdout=subprocess.PIPE, 
+                              stderr=subprocess.PIPE, 
+                              text=True
+                            )
+      print(f"[BROWSER {self.id}] Successfully taken screenshot for {self.domain}")
+    except subprocess.CalledProcessError as e:
+      print(f"Couldn't take screenshot for {self.domain}... {str(e)}")
+      self.interrupt()
+
+    print(f"[BROWSER {self.id}] End screenshot phase for {self.domain}")
 
   def interrupt(self):
     print(f'[BROWSER {self.id}] INTERRUPTING AND RESTARTING')
     self.manager = BrowserManager()
-    del(self.browser)
     self.init_browser()
     self.init_task_time = time()
     self.manager.free_callback(self)
@@ -113,7 +115,6 @@ class BrowserManager:
   # Check if there is a free web browser and a site to process
   @classmethod
   def checkQueue(cls):
-    print(f'Checking queue: {len(cls.queue)} sites waiting. {len(cls.free_instances)} browsers vacant.')
     if len(cls.free_instances) > 0 and len(cls.queue) > 0:
       browser = cls.free_instances.pop()
       domain = cls.pop_domain()
@@ -121,7 +122,7 @@ class BrowserManager:
         (url, file_path, instance) = domain
         instance.clock.checkpoint('SCREENSHOT_DEQUEUED')
         print(f'[MANAGER] BROWSER {browser.id} is now BUSY')
-        status = browser.take_screenshot(url, file_path, instance)
+        status = browser.take_screenshot(url)
         instance.screenshot_callback(status, file_path)
     cls.checkForCrashes()
 

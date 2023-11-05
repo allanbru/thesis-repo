@@ -45,31 +45,52 @@ class Domain:
 
   def get_ssl_certificate(self, port = 443):
     context = ssl.create_default_context()
-    with socket.create_connection((self.domain, port)) as sock:
-      with context.wrap_socket(sock, server_hostname=self.domain) as ssock:
+    try:
+      with socket.create_connection((self.domain, port)) as sock:
+        with context.wrap_socket(sock, server_hostname=self.domain) as ssock:
           cert = ssock.getpeercert()
-      self.ssl_cert = cert
+        self.ssl_cert = cert
+    except:
+      pass
     self.clock.checkpoint('SSL')
 
   def get_dns_info(self):
-    ips = dns.resolver.resolve(self.domain, 'A')
-    self.dns_info = [str(record.exchange) for record in ips]    
-    ips = dns.resolver.resolve(self.domain, 'CNAME')
-    self.dns_cname = [str(record.exchange) for record in ips]
+    try:
+      ips = dns.resolver.resolve(self.domain, 'A')
+      if len(ips) > 0:
+        self.dns_info = [str(record) for record in ips]    
+      
+      cnames = dns.resolver.resolve(self.domain, 'CNAME')
+      if len(cnames) > 0:
+        self.dns_cname = [str(record) for record in cnames]
+    except:
+      pass
     self.clock.checkpoint('DNS')
 
   def get_mx_records(self):
-    mx_records = dns.resolver.resolve(self.domain, 'MX')
-    self.mx_info = [str(record.exchange) for record in mx_records]
-    self.clock.checkpoint('MX')
-
+    try:
+      mx_records = dns.resolver.resolve(self.domain, 'MX')
+      if len(mx_records) > 0:
+        self.mx_info = [str(record.exchange) for record in mx_records]
+      self.clock.checkpoint('MX')
+    except:
+      pass
+  
   def get_whois_info(self):
-    self.whois_info = whois.whois(self.domain)
-    self.clock.checkpoint('WHOIS')
+    try:
+      self.whois_info = whois.whois(self.domain)
+      self.clock.checkpoint('WHOIS')
+    except:
+      pass
 
   def take_screenshot(self):
+    
+    if self.dns_info is None and self.dns_cname is None:
+      return self.dump()
+
+    print(f"[DOMAIN {self.domain}] Will have screenshot taken")
     timestring = get_time_string()
-    file_path = f'screenshots/{timestring}{self.domain}.png'
+    file_path = f'screenshots/{timestring} - {self.domain}.png'
 
     self.manager.push(self.domain, file_path, self)
 
