@@ -36,10 +36,11 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     dpkg -i google-chrome-stable_current_amd64.deb
 
 # Download and install ChromeDriver
-RUN wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/119.0.6045.105/linux64/chromedriver-linux64.zip -P /tmp/ && \
-    unzip -o /tmp/chromedriver-linux64.zip -d /tmp/ && \
-    chmod +x /tmp/chromedriver-linux64/chromedriver && \
-    mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+RUN CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
+    wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -P /tmp/ && \
+    unzip -o /tmp/chromedriver_linux64.zip -d /tmp/ && \
+    chmod +x /tmp/chromedriver && \
+    mv /tmp/chromedriver /usr/local/bin/chromedriver
 
 # Install Python dependencies without prompting for input
 RUN python -m pip install --no-cache-dir --upgrade \
@@ -51,20 +52,7 @@ RUN python -m pip install --no-cache-dir --upgrade \
     ndjson \
     webdriver-manager
 
-# Download and install dotnet SDK
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
-    dpkg -i packages-microsoft-prod.deb && \
-    rm packages-microsoft-prod.deb && \
-    apt-get update && \
-    apt-get install -y dotnet-sdk-7.0
-
 WORKDIR /app
-
-# Download and install Screenshoter
-RUN wget -N https://www.site.allanbr.net/screenshoter.zip -P /tmp/ && \
-    unzip -o /tmp/screenshoter.zip -d /app/ && \
-    chmod +x /app/screenshoter/PhishingCrawler && \
-    chmod +x /app/screenshoter/selenium-manager/linux/selenium-manager
 
 # Set the user as root to perform administrative tasks
 USER root
@@ -99,12 +87,6 @@ RUN chown -R 1000:root /app
 USER crawler
 
 ARG DEBUG_DOMAIN=0
-ARG THREADS=1
-ARG INPUT=input.csv
-ARG OUTPUT=output.csv
-ARG SCREENSHOT_ONLY=0
-ARG NS1=8.8.8.8
-ARG NS2=4.4.4.4
 
 # Set the entrypoint command to run your main.py script
-CMD python main.py --input $INPUT --output $OUTPUT --threads $THREADS --debug $DEBUG_DOMAIN --screenshot_only $SCREENSHOT_ONLY --ns1 $NS1 --ns2 $NS2
+CMD python main.py --input input.csv --output output.csv --threads 1 --debug $DEBUG_DOMAIN
