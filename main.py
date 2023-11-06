@@ -88,6 +88,6 @@ if __name__ == '__main__':
     options['screenshot_only'] = args.screenshot_only
     options['debug'] = args.debug
 
-    logging.basicConfig(filename='log.log', level = logging.INFO)
+    logging.basicConfig(filename='/data/log.log', level = logging.INFO)
 
     main(args.input, args.output, args.threads)

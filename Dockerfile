@@ -61,32 +61,33 @@ USER root
 RUN useradd -u 1000 -g root -m -d /home/crawler -s /bin/bash crawler
 
 # Create the desired directory and change its ownership and permissions
-RUN mkdir -p /app/screenshots \
-    && chown -R crawler:root /app/screenshots \
-    && chmod -R 777 /app/screenshots
-
-RUN mkdir -p /app/output \
-    && chown -R crawler:root /app/output \
-    && chmod -R 777 /app/output
-
-RUN chown -R crawler:root /app/* \
-    && chmod -R 777 /app/*
+#RUN mkdir -p /app/screenshots \
+#    && chown -R crawler:root /app/screenshots \
+#    && chmod -R 777 /app/screenshots
+#
+#RUN mkdir -p /app/output \
+#    && chown -R crawler:root /app/output \
+#    && chmod -R 777 /app/output
+#
+#RUN chown -R crawler:root /app/* \
+#    && chmod -R 777 /app/*
 
 # Copy the Python script and input.csv to the working directory
 COPY main.py .
 COPY auxclock.py .
 COPY browsermanager.py .
 COPY domain.py .
-COPY input.csv .
-COPY log.log .
+#COPY input.csv .
+#COPY log.log .
 
 RUN chmod +x /app/*.py
-RUN chmod +w /app/log.log
-RUN chown -R 1000:root /app 
+#RUN chmod +w /app/log.log
+#RUN chown -R 1000:root /app 
 
 USER crawler
 
 ARG DEBUG_DOMAIN=0
 
 # Set the entrypoint command to run your main.py script
-CMD python main.py --input input.csv --output output.csv --threads 1 --debug $DEBUG_DOMAIN
+CMD python main.py --input /data/input.csv --output /data/output.csv --threads 1 --debug $DEBUG_DOMAIN
+
