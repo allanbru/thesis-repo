@@ -36,11 +36,10 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     dpkg -i google-chrome-stable_current_amd64.deb
 
 # Download and install ChromeDriver
-RUN CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -P /tmp/ && \
-    unzip -o /tmp/chromedriver_linux64.zip -d /tmp/ && \
-    chmod +x /tmp/chromedriver && \
-    mv /tmp/chromedriver /usr/local/bin/chromedriver
+RUN wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/119.0.6045.105/linux64/chromedriver-linux64.zip -P /tmp/ && \
+    unzip -o /tmp/chromedriver-linux64.zip -d /tmp/ && \
+    chmod +x /tmp/chromedriver-linux64/chromedriver && \
+    mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
 
 # Install Python dependencies without prompting for input
 RUN python -m pip install --no-cache-dir --upgrade \
@@ -61,33 +60,55 @@ USER root
 RUN useradd -u 1000 -g root -m -d /home/crawler -s /bin/bash crawler
 
 # Create the desired directory and change its ownership and permissions
-#RUN mkdir -p /app/screenshots \
-#    && chown -R crawler:root /app/screenshots \
-#    && chmod -R 777 /app/screenshots
-#
-#RUN mkdir -p /app/output \
-#    && chown -R crawler:root /app/output \
-#    && chmod -R 777 /app/output
-#
-#RUN chown -R crawler:root /app/* \
-#    && chmod -R 777 /app/*
+RUN mkdir -p /app/screenshots \
+    && chown -R crawler:root /app/screenshots \
+    && chmod -R 777 /app/screenshots
+
+RUN mkdir -p /app/output \
+    && chown -R crawler:root /app/output \
+    && chmod -R 777 /app/output
+
+RUN chown -R crawler:root /app/* \
+    && chmod -R 777 /app/*
 
 # Copy the Python script and input.csv to the working directory
 COPY main.py .
 COPY auxclock.py .
 COPY browsermanager.py .
 COPY domain.py .
-#COPY input.csv .
-#COPY log.log .
+COPY input.csv .
+COPY log.log .
+COPY requirements.txt .
+COPY capture_socket.py .
+COPY Screenshoter .
+COPY Screenshoter.pdb .
+COPY selenium-manager selenium-manager
+COPY selenium-manager/linux selenium-manager/linux
+COPY selenium-manager/linux/selenium-manager selenium-manager/linux/selenium-manager
+COPY start.sh .
 
 RUN chmod +x /app/*.py
-#RUN chmod +w /app/log.log
-#RUN chown -R 1000:root /app 
+RUN chmod +x /app/Screenshoter
+RUN chmod +x /app/selenium-manager/linux/selenium-manager
+RUN chmod +x /app/start.sh
+RUN chmod +w /app/log.log
+RUN chown -R 1000:root /app 
 
 USER crawler
 
-ARG DEBUG_DOMAIN=0
+ENV DEBUG_DOMAIN=0
+ENV THREADS=4
+ENV NS1=8.8.8.8
+ENV NS2=4.4.4.4
+ENV LOCALHOST=127.0.0.1
+ENV LOCALPORT=9018
+
+EXPOSE ${LOCALPORT}
+
+RUN python -m pip install -r requirements.txt --no-cache-dir --upgrade
+
+# Expose volumes for screenshots and output
+VOLUME ["/app/screenshots", "/app/output"]
 
 # Set the entrypoint command to run your main.py script
-CMD python main.py --input /data/input.csv --output /data/output.csv --threads 1 --debug $DEBUG_DOMAIN
-
+CMD sh start.sh $LOCALHOST $LOCALPORT $THREADS $NS1 $NS2 $DEBUG_DOMAIN
