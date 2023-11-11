@@ -12,7 +12,7 @@ class CaptureSocket:
         """
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            #s.setblocking(0)
+            s.setblocking(0)
             s.settimeout(30.0)
             s.connect((cls.host, cls.port))
             s.send(bytearray(url, 'utf-8'))
@@ -23,3 +23,15 @@ class CaptureSocket:
             return False, None            
         except Exception:
             return False, None 
+        
+    @classmethod  
+    def terminate(cls):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((cls.host, cls.port))
+            s.send(bytearray("finished", 'utf-8'))
+            result = s.recv(1024).decode()
+            s.close()
+            return result is not None and result == "Finished"
+        except Exception:
+            return False

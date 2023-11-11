@@ -74,7 +74,6 @@ RUN chown -R crawler:root /app/* \
 # Copy the Python script and input.csv to the working directory
 COPY main.py .
 COPY auxclock.py .
-COPY browsermanager.py .
 COPY domain.py .
 COPY input.csv .
 COPY log.log .
