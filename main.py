@@ -79,7 +79,8 @@ def main(input_csv, output_csv, num_threads):
 
     i=0
     dots = "............................................"
-    while(not CaptureSocket.terminate()):
+    server = CaptureSocket()
+    while(not server.terminate()):
       print("Waiting for screenshoter to end {}".format(dots[0:i % len(dots)]))
       i += 1
       time.sleep(5)
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     CaptureSocket.host = str(args.localhost)
     CaptureSocket.port = int(args.localport) 
     print("Wait 30 seconds for sockets to start")
-    time.sleep(10) # sockets should open first
+    time.sleep(30) # sockets should open first
 
     logging.basicConfig(filename='log.log', level = logging.INFO)
 

@@ -32,6 +32,10 @@ class CaptureSocket:
             return False, None 
  
     def terminate(self):
+        """
+            Sends termination signal
+        """
+        self.start()
         try:
             self.s.send(bytearray("finished", 'utf-8'))
             result = self.s.recv(1024).decode()

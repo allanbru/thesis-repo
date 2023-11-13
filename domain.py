@@ -19,7 +19,6 @@ def get_time_string():
 
 class Domain:
 
-  server = CaptureSocket()
   NS = ["8.8.8.8", "4.4.4.4"]
 
   def __init__(self, id, main_domain, url, DNS = None):
@@ -35,6 +34,7 @@ class Domain:
     self.mx_info = None
     self.whois_info = None
     self.screenshot_file_path = None
+    self.server = CaptureSocket()
     print(f"Started {self.domain}")
 
     if DNS is not None:
