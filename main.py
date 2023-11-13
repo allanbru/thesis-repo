@@ -112,7 +112,7 @@ if __name__ == '__main__':
     CaptureSocket.host = str(args.localhost)
     CaptureSocket.port = int(args.localport) 
     print("Wait 30 seconds for sockets to start")
-    #time.sleep(30) # sockets should open first
+    time.sleep(10) # sockets should open first
 
     logging.basicConfig(filename='log.log', level = logging.INFO)
 

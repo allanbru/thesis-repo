@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM ubuntu:latest
 
 # Install necessary system dependencies without confirmation
 RUN apt-get update && \
@@ -25,6 +25,11 @@ RUN apt-get update && \
     libxkbcommon0 \
     libxrandr2 \
     xdg-utils \
+    python3-pip \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
     --no-install-recommends
 
 # Download and install libu2f-udev
@@ -40,16 +45,6 @@ RUN wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/119.0.60
     unzip -o /tmp/chromedriver-linux64.zip -d /tmp/ && \
     chmod +x /tmp/chromedriver-linux64/chromedriver && \
     mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-
-# Install Python dependencies without prompting for input
-RUN python -m pip install --no-cache-dir --upgrade \
-    requests \
-    tldextract \
-    python-whois \
-    dnspython \
-    selenium \
-    ndjson \
-    webdriver-manager
 
 WORKDIR /app
 
@@ -104,7 +99,7 @@ ENV LOCALPORT=9018
 
 EXPOSE ${LOCALPORT}
 
-RUN python -m pip install -r requirements.txt --no-cache-dir --upgrade
+RUN python3 -m pip install -r requirements.txt --no-cache-dir --upgrade
 
 # Expose volumes for screenshots and output
 VOLUME ["/app/screenshots", "/app/output"]

@@ -19,6 +19,7 @@ def get_time_string():
 
 class Domain:
 
+  server = CaptureSocket()
   NS = ["8.8.8.8", "4.4.4.4"]
 
   def __init__(self, id, main_domain, url, DNS = None):
@@ -99,7 +100,7 @@ class Domain:
 
   def __screenshot__(self):
     self.clock.checkpoint('SCREENSHOT_START')
-    CaptureSocket.get_screenshot(self.domain)
+    self.server.get_screenshot(self.domain)
     self.screenshot_callback(False, None)
 
   def screenshot_callback(self, status, filepath):

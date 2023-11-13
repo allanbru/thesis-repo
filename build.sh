@@ -1,1 +1,1 @@
-docker build -t phishingcrawler . --build-arg DEBUG_DOMAIN=0
+docker build -t phishingcrawler .

@@ -4,34 +4,38 @@ class CaptureSocket:
     
     host = "127.0.0.1"
     port = 9018
+    
+    def __init__(self):
+        self.s = None
+        self.start()
+    
+    def start(self):
+        try:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s.setblocking(0)
+            self.s.connect((self.host, self.port))
+        except Exception as e:
+            print(e)
 
-    @classmethod
-    def get_screenshot(cls, url):
+    def get_screenshot(self, url):
         """
             Returns path to file
         """
+        
+        self.start()
+
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.setblocking(0)
-            s.settimeout(30.0)
-            s.connect((cls.host, cls.port))
-            s.send(bytearray(url, 'utf-8'))
-            #result = s.recv(1024).decode()
-            s.close()
-            #if result.startswith("Success:"):
-            #    return True, result.removeprefix("Success: ")
+            self.s.send(bytearray(url, 'utf-8'))
+            self.s.close()
             return False, None            
         except Exception:
             return False, None 
-        
-    @classmethod  
-    def terminate(cls):
+ 
+    def terminate(self):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((cls.host, cls.port))
-            s.send(bytearray("finished", 'utf-8'))
-            result = s.recv(1024).decode()
-            s.close()
+            self.s.send(bytearray("finished", 'utf-8'))
+            result = self.s.recv(1024).decode()
+            self.s.close()
             return result is not None and result == "Finished"
         except Exception:
             return False
